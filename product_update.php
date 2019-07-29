@@ -23,8 +23,6 @@ function debug($var) {
 
 function updateWooCommerceProducts() {
 
-    debug(11);exit;
-
     set_time_limit (500);
 
     $apiUser = get_option('api_login');
