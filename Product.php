@@ -19,6 +19,7 @@ class Product
     protected $category;
     protected $images = array();
     protected $synonyms = array();
+    protected $documents = array();
     protected $attributes;
 
     public function setId($id) {
@@ -64,6 +65,14 @@ class Product
             $productFormated['attributes'] = $this->attributes;
         }
 
+        if(count($this->synonyms) > 0) {
+            $productFormated['short_description'] .= "\r\n Sinonimos: " . implode(", ", $this->synonyms) ;
+        }
+
+        if(count($this->documents) > 0) {
+            $productFormated['short_description'] .= "\r\n Documentos: " . implode(", ", $this->documents) ;
+        }
+
         $productFormated['categories'][] = $this->category;
 
         if(is_array($this->images)) {
@@ -93,11 +102,12 @@ class Product
         $product->regular_price     = $erpProductDetails->produtoPreco->valorFinal;
         $product->description       = SELF::escapeJsonString($erpProductDetails->descricao);
         $product->short_description = SELF::escapeJsonString($erpProductDetails->descricao2);
-        $product->category        = array('id' => WooCommerceCategories::$categories[$erpProductDetails->codProdutoGrupo]->id);
+        $product->category          = array('id' => WooCommerceCategories::$categories[$erpProductDetails->codProdutoGrupo]->id);
         $product->images            = SELF::uploadProductPhotos($erpProductDetails);
         $product->status            = 'publish';
         $product->attributes        = SELF::populateAttributes($erpProductDetails);
         $product->synonyms          = SELF::populateSynonyms($erpProductDetails);
+        $product->documents         = SELF::populateDocuments($erpProductDetails);
 
 
         return $product;
@@ -128,10 +138,24 @@ class Product
         $synonyms = array();
 
         foreach($erpProductDetails->produtoSinonimos as $produtoSinonimo) {
-            $synonyms = $produtoSinonimo->sinonimo;
+            $synonyms[] = $produtoSinonimo->sinonimo;
         }
 
         return $synonyms;
+    }
+
+    private static function populateDocuments($erpProductDetails) {
+
+        $documents = array();
+
+        foreach($erpProductDetails->produtoArquivos as $produtoArquivo) {
+
+            if($produtoArquivo->tipo == "outros") {
+                $documents[] = "<a href='http://shopplabapi.paicon.com.br/api/Produto/arquivoSite?codProdutoArquivoSite=" . $produtoArquivo->codProdutoArquivo . "'>" . $produtoArquivo->descricao . "</a>";
+            }
+        }
+
+        return $documents;
     }
 
     private static function uploadProductPhotos($erpProductDetails) {
@@ -174,7 +198,11 @@ class Product
 
     private function escapeJsonString($value) {
 
-        $result = str_replace("\n","\\n",$value); ;
+        $result = substr_replace("\n","\\n",$value);
+        $result = substr_replace("&nbsp;"," ",$result);
+        $result = trim($result, " \t\n\r\0\x0B\xC2\xA0");
+
+
 
         return $result;
     }
