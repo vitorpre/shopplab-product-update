@@ -75,6 +75,8 @@ class Product
 
         $productFormated['categories'][] = $this->category;
 
+        $productFormated['manage_stock'] = true;
+
         if(is_array($this->images)) {
             foreach ($this->images as $imageUrl) {
                 $productFormated['images'][] = array('src' => $imageUrl);
