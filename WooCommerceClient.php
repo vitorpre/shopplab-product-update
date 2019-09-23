@@ -27,9 +27,9 @@ class WooCommerceClient
         );
 
         $curl = curl_init();
-        //curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($curl, CURLOPT_USERPWD, "ck_06542b1fcb33bac732691b6a2029e440fdde00b6:cs_ccfbc04898b89bcfdabd10f651b80543f239c6dd");
+//        curl_setopt($curl, CURLOPT_USERPWD, "ck_06542b1fcb33bac732691b6a2029e440fdde00b6:cs_ccfbc04898b89bcfdabd10f651b80543f239c6dd");
         curl_setopt($curl, CURLOPT_URL, get_site_url() . $url . "?" . $parametersFormated);
         curl_setopt($curl,CURLOPT_RETURNTRANSFER,1);
         $response = curl_exec( $curl );

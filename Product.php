@@ -20,7 +20,10 @@ class Product
     protected $images = array();
     protected $synonyms = array();
     protected $documents = array();
-    protected $attributes;
+    protected $attributes = array();
+    protected $dimensions = array();
+    protected $weight;
+    protected $isOnSale = array();
 
     public function setId($id) {
         $this->id = $id;
@@ -73,9 +76,19 @@ class Product
             $productFormated['short_description'] .= "\r\n Documentos: " . implode(", ", $this->documents) ;
         }
 
+        if(count($this->dimensions) > 0) {
+            $productFormated['dimensions'] = $this->dimensions;
+        }
+
+        if($this->weight != "") {
+            $productFormated['weight'] = $this->weight;
+        }
+
         $productFormated['categories'][] = $this->category;
 
         $productFormated['manage_stock'] = true;
+
+        $productFormated['on_sale'] = $this->isOnSale;
 
         if(is_array($this->images)) {
             foreach ($this->images as $imageUrl) {
@@ -94,10 +107,6 @@ class Product
 
         $erpProductDetails = $ERPClient->getProductDetails($erpProduct->codProduto);
 
-        if($wooComerceProduct != null) {
-            SELF::deleteProductPhotos($wooComerceProduct);
-        }
-
         $product->sku               = $erpProductDetails->codProduto;
         $product->name              = $erpProductDetails->nome;
         $product->type              = 'simple';
@@ -105,11 +114,16 @@ class Product
         $product->description       = SELF::escapeJsonString($erpProductDetails->descricao);
         $product->short_description = SELF::escapeJsonString($erpProductDetails->descricao2);
         $product->category          = array('id' => WooCommerceCategories::$categories[$erpProductDetails->codProdutoGrupo]->id);
-        $product->images            = SELF::uploadProductPhotos($erpProductDetails);
+        if($wooComerceProduct == null) {
+            $product->images            = SELF::uploadProductPhotos($erpProductDetails);
+        }
         $product->status            = 'publish';
         $product->attributes        = SELF::populateAttributes($erpProductDetails);
         $product->synonyms          = SELF::populateSynonyms($erpProductDetails);
         $product->documents         = SELF::populateDocuments($erpProductDetails);
+//        $product->dimensions        = SELF::getDimensions($product->short_description);
+        $product->weight            = $erpProductDetails->pesoLiquido;
+        $product->isOnSale          = $erpProduct->vitrineWeb;
 
 
         return $product;
@@ -207,6 +221,46 @@ class Product
 
 
         return $result;
+    }
+
+    private static function getDimensions($string) {
+
+        $arrDimensions = array();
+
+        $arrMatchesAttributes = array();
+        $arrMatches = array();
+        $string = str_replace ("\r","",$string);
+        $string = str_replace ("\n","",$string);
+        preg_match('/.*?{{(.*)?}}/', $string, $arrMatchesAttributes);
+
+        $attributes = explode(";", $arrMatchesAttributes[1]);
+
+        foreach ($attributes as $attribute) {
+
+            preg_match('/altura:(.*)/', $attribute, $arrMatches);
+
+            if($arrMatches[1] != "") {
+                $arrDimensions['height'] = $arrMatches[1];
+            }
+
+            preg_match('/largura:(.*)/', $attribute, $arrMatches);
+
+            if($arrMatches[1] != "") {
+                $arrDimensions['width'] = $arrMatches[1];
+            }
+
+            preg_match('/comprimento:(.*)/', $attribute, $arrMatches);
+
+            if($arrMatches[1] != "") {
+                $arrDimensions['length'] = $arrMatches[1];
+            }
+
+        }
+
+
+
+        return $arrDimensions;
+
     }
 
 }

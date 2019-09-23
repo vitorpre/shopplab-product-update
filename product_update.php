@@ -23,7 +23,7 @@ function debug($var) {
 
 function updateWooCommerceProducts() {
 
-    set_time_limit (500);
+    set_time_limit (50000);
 
     $apiUser = get_option('api_login');
     $apiPassword = get_option('api_password');
@@ -48,20 +48,60 @@ function updateWooCommerceProducts() {
 
         WooCommerceCategories::saveNewCategories($productsErp->grupos);
 
-        processUpdate($products, $productsErp->produtos);
+        $start = microtime(true);
+
+        $productGroups = agroupProdutsToSend($productsErp->produtos);
+
+
+        $count = 0;
+
+        $productsWaitingToProcess = $products;
+
+        foreach ($productGroups as $productGroup) {
+
+//            if($count == 2) {
+//                break;
+//            }
+
+            processUpdate($products, $productGroup, $productsWaitingToProcess);
+
+            $count++;
+        }
+
+        inactiveProducts($productsWaitingToProcess);
+
+        $time_elapsed_secs = microtime(true) - $start;
+
+//        debug($time_elapsed_secs);
     }
 
 
 
 }
 
-function processUpdate($products, $productsErp) {
+function agroupProdutsToSend($produtos) {
+
+    $groupKeyCount = 0;
+
+    $productGroups = array();
+
+    foreach ($produtos as $produto) {
+
+        $productGroups[$groupKeyCount][] = $produto;
+
+        if(count($productGroups[$groupKeyCount]) == 100 ) {
+            $groupKeyCount++;
+        }
+    }
+
+    return $productGroups;
+
+}
+
+function processUpdate($products, $productsErp, &$productsToProcess) {
 
     $productsToAdd = array();
     $productsToUpdate = array();
-    $productsToRemove = array();
-
-    $productsToProcess = $products;
 
     foreach ($productsErp as $index => $productErp) {
 
@@ -73,10 +113,6 @@ function processUpdate($products, $productsErp) {
         }
 
         unset($productsToProcess[$productErp->codProduto]);
-    }
-
-    foreach ($productsToProcess as $product) {
-        $productsToRemove[$product->id] = $product;
     }
 
     $data = array();
@@ -97,17 +133,44 @@ function processUpdate($products, $productsErp) {
         $data['update'][] = $product->export();
     }
 
-    foreach ($productsToRemove as $id => $productToRemove) {
-        $product = new Product();
-        $product->setId($id);
-        $product->setStatus('private');
-        $data['update'][] = $product->export();
-    }
-
     $wooCommerce = new WooCommerceClient();
     $response = $wooCommerce->updateBatchProducts($data);
 
-    file_put_contents("C:/teste/log.log", $response, FILE_APPEND);
+//    file_put_contents("C:/teste/log.log", $response, FILE_APPEND);
+
+}
+
+function inactiveProducts($productsToProcess) {
+
+    $productGroups = agroupProdutsToSend($productsToProcess);
+
+    $wooCommerce = new WooCommerceClient();
+
+    foreach ($productGroups as $productGroup) {
+
+        $productsToRemove = array();
+
+        foreach ($productGroup as $product) {
+            $productsToRemove[$product->id] = $product;
+        }
+
+        $data = array();
+        $data['create'] = array();
+        $data['update'] = array();
+        $data['delete'] = array();
+
+        foreach ($productsToRemove as $id => $productToRemove) {
+            $product = new Product();
+            $product->setId($id);
+            $product->setStatus('private');
+            $data['update'][] = $product->export();
+        }
+
+        $response = $wooCommerce->updateBatchProducts($data);
+
+//        file_put_contents("C:/teste/log.log", $response, FILE_APPEND);
+    }
+
 
 }
 

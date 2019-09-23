@@ -24,7 +24,7 @@ class ERPClient
 
     public static function getActiveProducts() {
 
-        $products = SELF::get("api/Produto/listaProdutos?nomeReferencia&vitrineWeb=1");
+        $products = SELF::get("api/Produto/listaProdutos?nomeReferencia");
 
         return $products;
     }
