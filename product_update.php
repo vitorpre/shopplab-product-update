@@ -23,7 +23,7 @@ function debug($var) {
 
 function updateWooCommerceProducts() {
 
-    set_time_limit (50000);
+    set_time_limit (150000);
 
     $apiUser = get_option('api_login');
     $apiPassword = get_option('api_password');
@@ -59,16 +59,13 @@ function updateWooCommerceProducts() {
 
         foreach ($productGroups as $productGroup) {
 
-//            if($count == 2) {
-//                break;
-//            }
-
             processUpdate($products, $productGroup, $productsWaitingToProcess);
 
             $count++;
         }
 
-        inactiveProducts($productsWaitingToProcess);
+        // por enquanto não desativa os produtos que não vierem do mercante
+        //inactiveProducts($productsWaitingToProcess);
 
         $time_elapsed_secs = microtime(true) - $start;
 

@@ -118,6 +118,14 @@ class WooCommerceAttributes
             'has_archives' => true
         ];
 
+        $attributes[] = [
+            'name' => 'Marca',
+            'slug' => 'marca',
+            'type' => 'select',
+            'order_by' => 'menu_order',
+            'has_archives' => true
+        ];
+
         $wooCommerceClient = new WooCommerceClient();
 
         foreach ($attributes as $attribute) {
@@ -209,6 +217,13 @@ class WooCommerceAttributes
 
         $attributes['siglaUnidadeMedida'] = [
             'name' => 'Sigla Unidade de Medida',
+            'position' => 0,
+            'visible' => true,
+            'variation' => false,
+        ];
+
+        $attributes['marca'] = [
+            'name' => 'Marca',
             'position' => 0,
             'visible' => true,
             'variation' => false,

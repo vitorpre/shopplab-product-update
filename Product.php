@@ -106,6 +106,7 @@ class Product
         $product = new Product();
 
         $erpProductDetails = $ERPClient->getProductDetails($erpProduct->codProduto);
+        $erpProductDetails->marca   = $erpProduct->marca;
 
         $product->sku               = $erpProductDetails->codProduto;
         $product->name              = $erpProductDetails->nome;
