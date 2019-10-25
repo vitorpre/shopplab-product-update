@@ -22,6 +22,7 @@ class Product
     protected $documents = array();
     protected $attributes = array();
     protected $dimensions = array();
+    protected $tags = array();
     protected $weight;
     protected $isOnSale = array();
 
@@ -90,6 +91,9 @@ class Product
 
         $productFormated['on_sale'] = $this->isOnSale;
 
+        $productFormated['tags'] = $this->tags;
+
+
         if(is_array($this->images)) {
             foreach ($this->images as $imageUrl) {
                 $productFormated['images'][] = array('src' => $imageUrl);
@@ -122,6 +126,7 @@ class Product
         $product->attributes        = SELF::populateAttributes($erpProductDetails);
         $product->synonyms          = SELF::populateSynonyms($erpProductDetails);
         $product->documents         = SELF::populateDocuments($erpProductDetails);
+        $product->tags              = SELF::populateTags($erpProduct);
 //        $product->dimensions        = SELF::getDimensions($product->short_description);
         $product->weight            = $erpProductDetails->pesoLiquido;
         $product->isOnSale          = $erpProduct->vitrineWeb;
@@ -130,6 +135,21 @@ class Product
         return $product;
 
     }
+
+    private static function populateTags($erpProduct) {
+
+        $tagsFormated = array();
+
+        $tag = WooCommerceTags::$tags[ str_replace(" ", "-", strtolower($erpProduct->marca)) ];
+
+        debug(WooCommerceTags::$tags);
+
+        $tagsFormated[] = ['id' => $tag->id];
+
+        return $tagsFormated;
+
+    }
+
 
     private static function populateAttributes($erpProductDetails) {
 

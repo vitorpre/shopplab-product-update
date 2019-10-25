@@ -12,6 +12,7 @@ require_once ("options_page.php");
 require_once ("WooCommerceClient.php");
 require_once ("WooCommerceAttributes.php");
 require_once ("WooCommerceCategories.php");
+require_once ("WooCommerceTags.php");
 require_once ("ERPClient.php");
 require_once ("Product.php");
 
@@ -36,6 +37,7 @@ function updateWooCommerceProducts() {
     WooCommerceClient::setAuthentication($apiUser, $apiPassword);
     WooCommerceAttributes::loadAttributes();
     WooCommerceCategories::loadCategories();
+    WooCommerceTags::loadTags();
 
     if(!empty($apiUser) && !empty($apiPassword)) {
         $wooCommerceClient = new WooCommerceClient();
@@ -58,6 +60,8 @@ function updateWooCommerceProducts() {
         $productsWaitingToProcess = $products;
 
         foreach ($productGroups as $productGroup) {
+
+            WooCommerceTags::saveNewTags(WooCommerceTags::getProductsTags($productGroup));
 
             processUpdate($products, $productGroup, $productsWaitingToProcess);
 

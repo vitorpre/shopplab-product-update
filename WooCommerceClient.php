@@ -104,6 +104,19 @@ class WooCommerceClient
         return $response;
     }
 
+    public function updateBatchTags($tagsFormated) {
+
+        $response = SELF::post('/wp-json/wc/v3/products/tags/batch', $tagsFormated);
+
+        return $response;
+    }
+
+    public static function saveTag($tagFormated) {
+        $response = SELF::post('/wp-json/wc/v3/products/tags', $tagFormated);
+
+        return json_decode($response);
+    }
+
 
     private function indexProductsBySku($products) {
 
@@ -149,6 +162,41 @@ class WooCommerceClient
         } while ($countCategories >= 100);
 
         return $allCategories;
+
+    }
+
+    public function getAllTags() {
+
+        $allTags = array();
+
+        $page = 1;
+
+        $parameters = array(
+            'per_page' => 100,
+            'order' => "asc",
+            'orderby' => "id",
+            'page' => $page
+        );
+
+
+        $countProducts = null;
+
+        do {
+            $response = SELF::get("/wp-json/wc/v3/products/tags", $parameters);
+
+            $tags = json_decode($response);
+
+            $allTags = array_merge($allTags, $tags);
+
+            $countCategories = count($tags);
+
+            $page++;
+            $parameters['page'] = $page;
+
+
+        } while ($countCategories >= 100);
+
+        return $allTags;
 
     }
 
