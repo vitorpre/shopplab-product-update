@@ -26,6 +26,11 @@ class ERPClient
 
         $products = SELF::get("api/Produto/listaProdutos?nomeReferencia");
 
+        $products->produtos = array_map(function($product) {
+            $product->codProduto = "KX-" . $product->codProduto;
+            return $product;
+        }, $products->produtos);
+
         return $products;
     }
 

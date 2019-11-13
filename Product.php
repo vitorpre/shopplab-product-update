@@ -104,7 +104,7 @@ class Product
 
     }
 
-    public static function createByErpProduct($erpProduct, $wooComerceProduct = null) {
+    public static function createByErpProduct($erpProduct, $wooComerceProductSku = null) {
 
         $ERPClient = new ERPClient();
         $product = new Product();
@@ -119,7 +119,7 @@ class Product
         $product->description       = SELF::escapeJsonString($erpProductDetails->descricao);
         $product->short_description = SELF::escapeJsonString($erpProductDetails->descricao2);
         $product->category          = array('id' => WooCommerceCategories::$categories[$erpProductDetails->codProdutoGrupo]->id);
-        if($wooComerceProduct == null) {
+        if($wooComerceProductSku == null) {
             $product->images            = SELF::uploadProductPhotos($erpProductDetails);
         }
         $product->status            = 'publish';
@@ -141,8 +141,6 @@ class Product
         $tagsFormated = array();
 
         $tag = WooCommerceTags::$tags[ str_replace(" ", "-", strtolower($erpProduct->marca)) ];
-
-        debug(WooCommerceTags::$tags);
 
         $tagsFormated[] = ['id' => $tag->id];
 

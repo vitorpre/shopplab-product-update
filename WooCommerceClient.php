@@ -61,9 +61,9 @@ class WooCommerceClient
         return $response;
     }
 
-    public function getAllProducts() {
+    public function getAllProductsSku() {
 
-        $allProducts = array();
+        $allProductsSku = array();
 
         $parameters = array('per_page' => 100,
             'order' => "asc",
@@ -79,15 +79,20 @@ class WooCommerceClient
 
             $products = json_decode($response);
 
-            $allProducts = array_merge($allProducts, $products);
+            $skus = array_map(function($product) {
+                return $product->sku;
+            }, $products);
+
+            $allProductsSku = array_merge($allProductsSku, $skus);
 
             $countProducts = count($products);
+            unset($products);
             $parameters['offset'] += $countProducts;
 
 
         } while ($countProducts >= 100);
 
-        return $this->indexProductsBySku($allProducts);
+        return $allProductsSku;
 
     }
 

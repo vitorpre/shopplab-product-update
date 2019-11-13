@@ -24,7 +24,7 @@ function debug($var) {
 
 function updateWooCommerceProducts() {
 
-    set_time_limit (150000);
+    set_time_limit (300000);
 
     $apiUser = get_option('api_login');
     $apiPassword = get_option('api_password');
@@ -43,8 +43,7 @@ function updateWooCommerceProducts() {
         $wooCommerceClient = new WooCommerceClient();
         $erpClient = new ERPClient();
 
-        $products = $wooCommerceClient->getAllProducts();
-        unset($products[""]);
+        $skus = array_filter($wooCommerceClient->getAllProductsSku());
 
         $productsErp = $erpClient->getActiveProducts();
 
@@ -57,13 +56,13 @@ function updateWooCommerceProducts() {
 
         $count = 0;
 
-        $productsWaitingToProcess = $products;
+        $productsWaitingToProcess = $skus;
 
         foreach ($productGroups as $productGroup) {
 
             WooCommerceTags::saveNewTags(WooCommerceTags::getProductsTags($productGroup));
 
-            processUpdate($products, $productGroup, $productsWaitingToProcess);
+            processUpdate($skus, $productGroup, $productsWaitingToProcess);
 
             $count++;
         }
@@ -99,7 +98,7 @@ function agroupProdutsToSend($produtos) {
 
 }
 
-function processUpdate($products, $productsErp, &$productsToProcess) {
+function processUpdate($skus, $productsErp, &$productsToProcess) {
 
     $productsToAdd = array();
     $productsToUpdate = array();
@@ -128,8 +127,8 @@ function processUpdate($products, $productsErp, &$productsToProcess) {
     }
 
     foreach ($productsToUpdate as $id => $productToUpdate) {
-        $wooComerceProduct = $products[$productToUpdate->codProduto];
-        $product = Product::createByErpProduct($productToUpdate, $wooComerceProduct);
+        $wooComerceProductSku = in_array($productToUpdate->codProduto, $skus);
+        $product = Product::createByErpProduct($productToUpdate, $wooComerceProductSku);
         $product->setId($id);
         $data['update'][] = $product->export();
     }
@@ -137,7 +136,7 @@ function processUpdate($products, $productsErp, &$productsToProcess) {
     $wooCommerce = new WooCommerceClient();
     $response = $wooCommerce->updateBatchProducts($data);
 
-//    file_put_contents("C:/teste/log.log", $response, FILE_APPEND);
+//    file_put_contents("C:/teste/log.log", json_encode($response), FILE_APPEND);
 
 }
 
